@@ -24,7 +24,7 @@ typedef void (*Handler)(void);
 void waitForLight(void);
 void waitForKeyRelease(void);
 
-#define MIN_TIME 10
+#define MIN_TIME 240
 
 Handler handler = waitForLight;
 
@@ -41,7 +41,7 @@ void pSSSt(void) {
     unsigned char i;
 
     // blink with led
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 5; i++) {
         blink();
         __delay_ms(200);
     }
@@ -85,22 +85,18 @@ void mainTimer(void) {
 
     if (bp == 1) {
         bp = 0;
-        if (sec_count < MIN_TIME) blink();
+        if (sec_count < 4) blink();
 
         lightBuf <<= 1;
         if (GP2 == 1) lightBuf++;
-        if ((lightBuf & 0x0f) == 0) {
+        if ((lightBuf & 0x03) == 0) {
             timerOff();
         }
-
     }
 
-    //    if (GP3 == 1) {
-    //        keyPressed();
-    //    } else {
-
-    //    }
-
+    if (GP3 == 1) {
+        keyPressed();
+    }
 }
 
 void lightOn(void) {
@@ -108,7 +104,7 @@ void lightOn(void) {
 
     sec_count = 0;
     bp = 0;
-    lightBuf = 0x0f;
+    lightBuf = 0x01;
 
     TMR1H = 229; // preset for timer1 MSB register
     TMR1L = 046; // preset for timer1 LSB register
@@ -145,10 +141,6 @@ void main(void) {
 
     GPIO = 0x10;
     TRISIO = 0x0C; //all pins as Output PIN except 2 and 3
-
-    // input with pull up
-    //OPTION_REGbits.nGPPU = 0;
-    //WPU2 = 1;
 
     OPTION_REGbits.INTEDG = 1; // falling edge trigger the interrupt
 
