@@ -1,8 +1,8 @@
 # awTimer
 * Small battery powered device with nanoWatt Technology from Microchip.
 * devise start count seconds when light is switched on, first 3 sec indicated by LED blinks
-* when light goes off in case if seconds are more then 240 motor activated for 700ms after 5 blinks of LED 
-* motor can be activated manually by button press whel light is on
+* when light goes off in case if seconds are more than 240 motor activated for 700ms after 5 blinks of LED 
+* motor can be activated manually by button press when light is on
  
 
 ## HW/SW
