@@ -31,6 +31,33 @@ Handler handler = waitForLight;
 unsigned char sec_count;
 unsigned char bp;
 
+void Timer1_on(void) {
+    //Timer1 Registers Prescaler= 1 - TMR1 Preset = 34285 - Freq = 1.00 Hz - Period = 1.000032 seconds
+    T1CONbits.T1CKPS1 = 0; // bits 5-4  Prescaler Rate Select bits
+    T1CONbits.T1CKPS0 = 0; // bit 4
+    T1CONbits.TMR1CS = 0; // bit 1 Timer1 Clock Source Select bit...0 = Internal clock (FOSC/4)
+
+    TMR1H = 229; // preset for timer1 MSB register
+    TMR1L = 046; // preset for timer1 LSB register
+
+    // Interrupt Registers
+    PIR1bits.TMR1IF = 0; // clear timer1 interrupt flag TMR1IF
+    PIE1bits.TMR1IE = 1; // enable Timer1 interrupts
+    INTCONbits.PEIE = 1; // bit6 Peripheral Interrupt Enable bit...1 = Enables all unmasked peripheral interrupts
+
+    T1CONbits.TMR1ON = 1; // bit 0 enables timer
+}
+
+void Timer1_off(void) {
+    // Interrupt Registers
+    PIR1bits.TMR1IF = 0; // clear timer1 interrupt flag TMR1IF
+    PIE1bits.TMR1IE = 0; // enable Timer1 interrupts
+    INTCONbits.PEIE = 0; // bit6 Peripheral Interrupt Enable bit...1 = Enables all unmasked peripheral interrupts
+
+    T1CONbits.TMR1ON = 0; // bit 0 enables timer
+
+}
+
 void blink(void) {
     GP4 = 0; //LED on
     __delay_ms(1);
@@ -41,7 +68,7 @@ void pSSSt(void) {
     unsigned char i;
 
     // blink with led
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 3; i++) {
         blink();
         __delay_ms(200);
     }
@@ -57,7 +84,7 @@ void timerOff(void) {
     if (sec_count >= MIN_TIME) pSSSt();
 
     handler = waitForLight;
-    T1CONbits.TMR1ON = 0; // bit 0 enables timer
+    Timer1_off();
 }
 
 void waitForKeyRelease(void) {
@@ -89,7 +116,7 @@ void mainTimer(void) {
 
         lightBuf <<= 1;
         if (GP2 == 1) lightBuf++;
-        if ((lightBuf & 0x03) == 0) {
+        if ((lightBuf & 0x07) == 0) {
             timerOff();
         }
     }
@@ -106,9 +133,7 @@ void lightOn(void) {
     bp = 0;
     lightBuf = 0x01;
 
-    TMR1H = 229; // preset for timer1 MSB register
-    TMR1L = 046; // preset for timer1 LSB register
-    T1CONbits.TMR1ON = 1; // bit 0 enables timer
+    Timer1_on();
 }
 
 void waitForLight(void) {
@@ -143,20 +168,6 @@ void main(void) {
     TRISIO = 0x0C; //all pins as Output PIN except 2 and 3
 
     OPTION_REGbits.INTEDG = 1; // falling edge trigger the interrupt
-
-    //Timer1 Registers Prescaler= 1 - TMR1 Preset = 34285 - Freq = 1.00 Hz - Period = 1.000032 seconds
-    T1CONbits.T1CKPS1 = 0; // bits 5-4  Prescaler Rate Select bits
-    T1CONbits.T1CKPS0 = 0; // bit 4
-    T1CONbits.TMR1CS = 0; // bit 1 Timer1 Clock Source Select bit...0 = Internal clock (FOSC/4)
-    T1CONbits.TMR1ON = 0; // bit 0 enables timer
-
-    TMR1H = 229; // preset for timer1 MSB register
-    TMR1L = 046; // preset for timer1 LSB register
-
-    // Interrupt Registers
-    PIR1bits.TMR1IF = 0; // clear timer1 interrupt flag TMR1IF
-    PIE1bits.TMR1IE = 1; // enable Timer1 interrupts
-    INTCONbits.PEIE = 1; // bit6 Peripheral Interrupt Enable bit...1 = Enables all unmasked peripheral interrupts
 
     INTCONbits.INTF = 0; // clear the interrupt flag
     INTCONbits.INTE = 1; // enable the external interrupt
